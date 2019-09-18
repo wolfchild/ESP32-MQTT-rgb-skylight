@@ -25,7 +25,9 @@ bool WebOta::IsUpdateAvailable()
         if (firmwareMetadata != NULL)
         {
             char *version = cJSON_GetObjectItemCaseSensitive(firmwareMetadata, "version")->valuestring;
-            updateAvailable = (isLaterVersion(version, _currentVersion));
+            //Serial.println(version);
+            Serial.println(_currentVersion);
+            //updateAvailable = (isLaterVersion(version, _currentVersion));
         }
     }
     else
