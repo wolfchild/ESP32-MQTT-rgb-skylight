@@ -12,8 +12,8 @@ typedef struct
 
 IPAddress ipAddress;
 
-const char *ssid = "KCW-Guest";
-const char *password = "Gyx3sKMVq";
+const char *ssid = "*****";
+const char *password = "*****";
 
 const char *ownssid = "skylight";
 const char *ownpassword = "skylight-psw";
