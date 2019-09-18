@@ -19,15 +19,19 @@ bool WebOta::IsUpdateAvailable()
     _phttp->begin(_metadataUrl, _rootCertAuthority);
 
     int httpCode = _phttp->GET();
-    if (httpCode > 0)
+    Serial.println(httpCode);
+    if (httpCode == 200)
     {
-        cJSON *firmwareMetadata = cJSON_Parse((char *)_phttp->getString().c_str());
+        char * payload = (char *)_phttp->getString().c_str();
+        Serial.println(payload);
+        
+        cJSON *firmwareMetadata = cJSON_Parse(payload);
         if (firmwareMetadata != NULL)
         {
             char *version = cJSON_GetObjectItemCaseSensitive(firmwareMetadata, "version")->valuestring;
-            //Serial.println(version);
+            Serial.println(version);
             Serial.println(_currentVersion);
-            //updateAvailable = (isLaterVersion(version, _currentVersion));
+            updateAvailable = (isLaterVersion(version, _currentVersion));
         }
     }
     else
