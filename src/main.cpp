@@ -2,13 +2,8 @@
 #include <ESPmDNS.h>
 #include <WiFi.h>
 #include <WebOta.h>
-
-typedef struct
-{
-  char *Name;
-  char *Protocol;
-  uint16_t Port;
-} mDNSEntry_t;
+#include <WebServer.h>
+#include <MqttClient.h>
 
 IPAddress ipAddress;
 
@@ -18,7 +13,7 @@ const char *password = "*****";
 const char *ownssid = "skylight";
 const char *ownpassword = "skylight-psw";
 
-const char *otaMetadataUrl = "https://raw.githubusercontent.com/wolfchild/rgb-skylight/master/current-release.json";
+const char *otaMetadataUrl = "https://raw.githubusercontent.com/wolfchild/ESP32-MQTT-rgb-skylight/master/current-release.json";
 const char *firmwareVersion = "0.0.1";
 const char *root_ca =
     "-----BEGIN CERTIFICATE-----\n"
@@ -84,24 +79,10 @@ void setup()
 
   // Establish WiFi connectivitiy
   ipAddress = connectToWiFi(ssid, password);
-  WebOta *webOta = NULL;
 
   if ((uint32_t)ipAddress != 0)
   {
     Serial.println("Connection to existing network established.");
-    webOta = new WebOta(otaMetadataUrl, firmwareVersion, root_ca);
-
-    if (webOta->IsUpdateAvailable())
-    {
-      Serial.println("Update available");
-      webOta->UpdateFirmware();
-      Serial.println("Firmware update in progress");
-    }
-    else
-    {
-      Serial.println("No update due");
-    }
-    delete webOta;
   }
   else
   {
@@ -113,7 +94,23 @@ void setup()
   Serial.print("IP address: ");
   Serial.println(ipAddress);
 
+  // Peform OTA checks
+  WebOta *webOta = new WebOta(otaMetadataUrl, firmwareVersion, root_ca);
+
+  if (webOta->IsUpdateAvailable())
+  {
+    Serial.println("Update available");
+    webOta->UpdateFirmware();
+    Serial.println("Firmware update in progress");
+  }
+  else
+  {
+    Serial.println("No update due");
+  }
+  delete webOta;
+
   // start admin web server
+  WebServer *webServer = new WebServer();
 
   // start MQTT client
 
