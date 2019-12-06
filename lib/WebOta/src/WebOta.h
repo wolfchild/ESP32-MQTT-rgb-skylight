@@ -13,6 +13,7 @@ private:
     const char *_metadataUrl;
     const char *_currentVersion;
     const char *_rootCertAuthority;
+    bool _updateAvailable = false;
     bool isLaterVersion(char *serverVersion, const char *currentVersion);
 };
 

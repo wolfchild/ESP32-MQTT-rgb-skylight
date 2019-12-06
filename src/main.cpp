@@ -1,21 +1,27 @@
 #include <Arduino.h>
 #include <ESPmDNS.h>
+#include <Ticker.h>
 #include <WiFi.h>
+
 #include <WebOta.h>
 #include <WebServer.h>
 #include <MqttClient.h>
 
 IPAddress ipAddress;
-
+WebOta *webOta;
+WebServer *webServer;
+Ticker updateChecker;
 const char *ssid = "*****";
 const char *password = "*****";
 
 const char *ownssid = "skylight";
 const char *ownpassword = "skylight-psw";
 
+const float updateCheckInterval = 86400; // every 24 hours
+
 const char *otaMetadataUrl = "https://raw.githubusercontent.com/wolfchild/ESP32-MQTT-rgb-skylight/master/current-release.json";
 const char *firmwareVersion = "0.0.1";
-const char *root_ca =
+const char *otaRootCertAuthority =
     "-----BEGIN CERTIFICATE-----\n"
     "MIIDxTCCAq2gAwIBAgIQAqxcJmoLQJuPC3nyrkYldzANBgkqhkiG9w0BAQUFADBs\n"
     "MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3\n"
@@ -40,23 +46,36 @@ const char *root_ca =
     "+OkuE6N36B9K\n"
     "-----END CERTIFICATE-----\n";
 
-IPAddress connectToWiFi(const char *ssid, const char *password)
+IPAddress setupWiFiConnection(const char *ssid, const char *password)
 {
   uint8_t maxRetries = 20;
 
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
   while ((WiFi.status() != WL_CONNECTED) && (--maxRetries != 0))
   { // Wait for the Wi-Fi to connect
     delay(500);
   }
-  return WiFi.localIP();
-}
 
-IPAddress createWiFiNetwork(const char *ssid, const char *password)
-{
-  WiFi.softAP(ownssid, ownpassword);
-  return WiFi.softAPIP();
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    int n = WiFi.scanNetworks();
+    if (n != 0)
+    {
+      for (int i = 0; i < n; i++)
+      {
+        Serial.print(i);
+      }
+    }
+    WiFi.softAP(ownssid, ownpassword);
+
+    Serial.println("Created new network successfully.");
+    return WiFi.softAPIP();
+  }
+
+  Serial.println("Connection to existing network established.");
+  return WiFi.localIP();
 }
 
 bool startmDNSResponder(const char *hostName)
@@ -73,30 +92,9 @@ bool startmDNSResponder(const char *hostName)
   return (false);
 }
 
-void setup()
+void processFirmwareUpdate()
 {
-  Serial.begin(115200);
-
-  // Establish WiFi connectivitiy
-  ipAddress = connectToWiFi(ssid, password);
-
-  if ((uint32_t)ipAddress != 0)
-  {
-    Serial.println("Connection to existing network established.");
-  }
-  else
-  {
-    Serial.println("Could not connect to existing WiFi.");
-    ipAddress = createWiFiNetwork(ownssid, ownpassword);
-    Serial.println("Created new network successfully.");
-  }
-
-  Serial.print("IP address: ");
-  Serial.println(ipAddress);
-
-  // Peform OTA checks
-  WebOta *webOta = new WebOta(otaMetadataUrl, firmwareVersion, root_ca);
-
+  webOta = new WebOta(otaMetadataUrl, firmwareVersion, otaRootCertAuthority);
   if (webOta->IsUpdateAvailable())
   {
     Serial.println("Update available");
@@ -108,9 +106,26 @@ void setup()
     Serial.println("No update due");
   }
   delete webOta;
+}
+
+void setup()
+{
+  Serial.begin(115200);
+
+  // Establish WiFi connectivitiy
+  ipAddress = setupWiFiConnection(ssid, password);
+
+  Serial.print("IP address: ");
+  Serial.println(ipAddress);
+
+  // perform OTA update check
+  processFirmwareUpdate();
+
+  // initialize firmware OTA update checker
+  updateChecker.attach(updateCheckInterval, processFirmwareUpdate);
 
   // start admin web server
-  WebServer *webServer = new WebServer();
+  webServer = new WebServer();
 
   // start MQTT client
 

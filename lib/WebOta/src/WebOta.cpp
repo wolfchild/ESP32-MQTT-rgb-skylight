@@ -5,6 +5,7 @@
 
 HTTPClient *_phttp = NULL;
 char *_firmwareUrl;
+bool _updateAvailable = false;
 
 WebOta::WebOta(const char *metadataUrl, const char *currentVersion, const char *rootCertAuthority)
 {
@@ -15,8 +16,6 @@ WebOta::WebOta(const char *metadataUrl, const char *currentVersion, const char *
 
 bool WebOta::IsUpdateAvailable()
 {
-    bool updateAvailable = false;
-
     _phttp = new HTTPClient();
     _phttp->begin(_metadataUrl, _rootCertAuthority);
 
@@ -29,11 +28,11 @@ bool WebOta::IsUpdateAvailable()
         {
             char *version = cJSON_GetObjectItemCaseSensitive(firmwareMetadata, "version")->valuestring;
             _firmwareUrl = cJSON_GetObjectItemCaseSensitive(firmwareMetadata, "url")->valuestring;
-            updateAvailable = (isLaterVersion(version, _currentVersion));
+            _updateAvailable = (isLaterVersion(version, _currentVersion));
         }
     }
     _phttp->end();
-    return updateAvailable;
+    return _updateAvailable;
 }
 
 WebOta::~WebOta()
@@ -43,16 +42,20 @@ WebOta::~WebOta()
 
 bool WebOta::UpdateFirmware()
 {
-    esp_http_client_config_t ota_client_config;
-
-    ota_client_config.url = _firmwareUrl;
-    ota_client_config.cert_pem = _rootCertAuthority;
-
-    esp_err_t ret = esp_https_ota(&ota_client_config);
-    if (ret == ESP_OK)
+    if (_updateAvailable)
     {
-        esp_restart();
+        esp_http_client_config_t ota_client_config;
+
+        ota_client_config.url = _firmwareUrl;
+        ota_client_config.cert_pem = _rootCertAuthority;
+
+        esp_err_t ret = esp_https_ota(&ota_client_config);
+        if (ret == ESP_OK)
+        {
+            esp_restart();
+        }
     }
+
     return false;
 }
 

@@ -1,0 +1,30 @@
+.autoheight {
+  height: auto;
+}
+
+.imagebacked {
+  padding: 2px 2px 2px 24px;
+  background-repeat: no-repeat;
+  background-position: 1px 1px;
+  vertical-align: middle;
+}
+
+.wifi-0 {
+  background-image: url(images/wifi-0.png);
+}
+
+.wifi-1 {
+  background-image: url(images/wifi-1.png);
+}
+
+.wifi-2 {
+  background-image: url(images/wifi-2.png);
+}
+
+.wifi-3 {
+  background-image: url(images/wifi-3.png);
+}
+
+.wifi-4 {
+  background-image: url(images/wifi-4.png);
+}

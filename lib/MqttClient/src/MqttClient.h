@@ -5,13 +5,12 @@
 class MqttClient
 {
 public:
-    MqttClient(const char *serverUrl, uint16_t port, Client *wifiClient);
+    MqttClient(const char *serverUrl, uint16_t port, WiFiClient wifiClient);
     ~MqttClient();
 
 private:
     const char *_serverUrl;
     uint16_t _port;
-    Client *_wifiClient;
 };
 
 #endif
