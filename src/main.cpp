@@ -2,20 +2,22 @@
 #include <ESPmDNS.h>
 #include <Ticker.h>
 #include <WiFi.h>
+#include <Preferences.h>
 
 #include <WebOta.h>
 #include <WebServer.h>
 #include <MqttClient.h>
+#include <WifiConfig.h>
+
+#define DEFAULT_STA_SSID "skylight"
+#define DEFAULT_STA_PSW "skylight-psw"
 
 IPAddress ipAddress;
+Preferences prefs;
+
 WebOta *webOta;
 WebServer *webServer;
 Ticker updateChecker;
-const char *ssid = "*****";
-const char *password = "*****";
-
-const char *ownssid = "skylight";
-const char *ownpassword = "skylight-psw";
 
 const float updateCheckInterval = 86400; // every 24 hours
 
@@ -46,12 +48,46 @@ const char *otaRootCertAuthority =
     "+OkuE6N36B9K\n"
     "-----END CERTIFICATE-----\n";
 
-IPAddress setupWiFiConnection(const char *ssid, const char *password)
+IPAddress setupWiFiConnection()
 {
   uint8_t maxRetries = 20;
+  WiFiConfig staWiFiConfig;
+  WiFiConfig apnWiFiConfig;
+
+  prefs.begin("wifi");
+  prefs.clear();
+
+  if (prefs.getBytesLength("staCredentials") == 0)
+  {
+    strlcpy(staWiFiConfig.ssid, "", sizeof(staWiFiConfig.ssid));
+    strlcpy(staWiFiConfig.password, "********", sizeof(staWiFiConfig.password));
+    prefs.putBytes("staCredentials", &staWiFiConfig, sizeof(staWiFiConfig));
+  }
+
+  if (prefs.getBytesLength("apCredentials") == 0)
+  {
+    strlcpy(apnWiFiConfig.ssid, DEFAULT_STA_SSID, sizeof(apnWiFiConfig.ssid));
+    strlcpy(apnWiFiConfig.password, DEFAULT_STA_PSW, sizeof(apnWiFiConfig.password));
+    prefs.putBytes("apCredentials", &apnWiFiConfig, sizeof(apnWiFiConfig));
+  }
+
+  prefs.getBytes("staCredentials", &staWiFiConfig, sizeof(staWiFiConfig));
+  prefs.getBytes("apCredentials", &apnWiFiConfig, sizeof(apnWiFiConfig));
+
+#ifdef DEBUG
+  Serial.println("Station credentials");
+  Serial.printf("SSID : %s\n", staWiFiConfig.ssid);
+  Serial.printf("PASS : %s\n", staWiFiConfig.password);
+
+  Serial.println("Access point credentials");
+  Serial.printf("SSID : %s\n", apnWiFiConfig.ssid);
+  Serial.printf("PASS : %s\n", apnWiFiConfig.password);
+#endif
+
+  prefs.end();
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
+  WiFi.begin(staWiFiConfig.ssid, staWiFiConfig.password);
 
   while ((WiFi.status() != WL_CONNECTED) && (--maxRetries != 0))
   { // Wait for the Wi-Fi to connect
@@ -60,15 +96,8 @@ IPAddress setupWiFiConnection(const char *ssid, const char *password)
 
   if (WiFi.status() != WL_CONNECTED)
   {
-    int n = WiFi.scanNetworks();
-    if (n != 0)
-    {
-      for (int i = 0; i < n; i++)
-      {
-        Serial.print(i);
-      }
-    }
-    WiFi.softAP(ownssid, ownpassword);
+    WiFi.disconnect();
+    WiFi.softAP(apnWiFiConfig.ssid, apnWiFiConfig.password);
 
     Serial.println("Created new network successfully.");
     return WiFi.softAPIP();
@@ -113,7 +142,7 @@ void setup()
   Serial.begin(115200);
 
   // Establish WiFi connectivitiy
-  ipAddress = setupWiFiConnection(ssid, password);
+  ipAddress = setupWiFiConnection();
 
   Serial.print("IP address: ");
   Serial.println(ipAddress);

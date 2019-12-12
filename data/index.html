@@ -3,12 +3,12 @@
 
 <head>
   <meta charset="utf-8">
-  <title>%Page title%</title>
+  <title>%PAGETITLE%</title>
   <meta name="description" content="">
   <meta name="author" content="Edwin Cini">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="css/normalize.css">
-  <link rel="stylesheet" href="css/skeleton.css">
+  <link rel="stylesheet" href="css/normalize.min.css">
+  <link rel="stylesheet" href="css/skeleton.min.css">
   <link rel="stylesheet" href="css/custom.css">
   <link rel="icon" type="image/png" href="images/favicon.png">
   <script type="text/javascript" src="index.js"></script>
@@ -17,20 +17,14 @@
 <body>
   <div class="container">
     <div class="row">
-      <div class="one-half column" style="margin-top: 25%">
+      <div style="margin-top: 25%">
         <h3>WiFi Configuration</h3>
         <p>Please select your preferred network and save. For hidden networks, enter the SSID manually.</p>
         <form>
           <div class="row">
             <div class="u-full-width">
               <label for="networkSelector">Detected networks</label>
-              <select class="u-full-width autoheight" size="4" id="networkSelector">
-                <option value="kcw_guest" class="imagebacked wifi-0">KCW GUEST</option>
-                <option value="home" class="imagebacked wifi-1">Home (Open)</option>
-                <option value="office" class="imagebacked wifi-2">Office (WPA2)</option>
-                <option value="hotel" class="imagebacked wifi-3">Hotel (Open)</option>
-                <option value="school" class="imagebacked wifi-4">School (WEP)</option>
-              </select>
+              <select class="u-full-width autoheight" size="4" id="networkSelector"></select>
             </div>
           </div>
           <div class="row">
