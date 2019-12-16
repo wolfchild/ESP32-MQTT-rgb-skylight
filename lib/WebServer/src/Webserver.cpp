@@ -14,26 +14,10 @@
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 
-// Replaces placeholder with LED state value
-String processor(const String &var)
-{
-    Serial.println(var);
-    if (var == "STATE")
-    {
-        return "OFF";
-    }
-    return String();
-}
-
 // ---- API handlers
 void handleWifiScan(AsyncWebServerRequest *request)
 {
-    //int n = WiFi.scanComplete();
-    //if (n == WIFI_SCAN_FAILED)
-    //{
     int n = WiFi.scanNetworks();
-    //}
-    Serial.printf("scanning wifi (%d)\n", n);
 
     String json = "[";
     if (n > 0)
@@ -74,7 +58,7 @@ void handleWifiConfigGet(AsyncWebServerRequest *request)
     if (a == sizeof(WiFiConfig))
     {
         json += "\"ssid\":\"" + String(wifiConfig.ssid) + "\",";
-        json += "\"password\":\"" + String(wifiConfig.password) + "\"";
+        json += "\"key\":\"" + String(wifiConfig.password) + "\"";
     }
     json += "}";
 
@@ -83,8 +67,40 @@ void handleWifiConfigGet(AsyncWebServerRequest *request)
     request->send(response);
 }
 
-void handleWifiConfigPost()
+void handleWifiConfigPost(AsyncWebServerRequest *request)
 {
+    String json = "{";
+    int responseCode = 500;
+
+    if (request->hasParam("ssid", true) && request->hasParam("key", true))
+    {
+        AsyncWebParameter *p;
+        Preferences prefs;
+        WiFiConfig wifiConfig;
+        prefs.begin("wifi");
+
+        p = request->getParam("ssid", true);
+        strlcpy(wifiConfig.ssid, p->value().c_str(), sizeof(wifiConfig.ssid));
+
+        p = request->getParam("key", true);
+        strlcpy(wifiConfig.password, p->value().c_str(), sizeof(wifiConfig.password));
+
+        prefs.putBytes("staCredentials", &wifiConfig, sizeof(wifiConfig));
+        prefs.end();
+
+        json += "\"message\":\"Configuration updated successfully.";
+        responseCode = 200;
+    }
+    else
+    {
+        json += "\"message\":\"Error while saving configuration.";
+        responseCode = 500;
+    }
+    json += "}";
+
+    AsyncWebServerResponse *response = request->beginResponse(responseCode, F(CONTENT_TYPE_JSON), json);
+    response->addHeader(F(CORS_HEADER), "*");
+    request->send(response);
 }
 
 WebServer::WebServer()
@@ -96,20 +112,18 @@ WebServer::WebServer()
         return;
     }
 
+    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
     server.serveStatic("/index.html", SPIFFS, "/index.html");
     server.serveStatic("/index.js", SPIFFS, "/index.js");
     server.serveStatic("/css/", SPIFFS, "/css/");
     server.serveStatic("/images/", SPIFFS, "/images/");
 
-    // Route for root / web page
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(SPIFFS, "/index.html", String(), false, processor);
-    });
-
-    // API get
+    // API GET
     server.on("/api/scan", HTTP_GET, handleWifiScan);
     server.on("/api/wificonfig", HTTP_GET, handleWifiConfigGet);
 
+    // API POST
+    server.on("/api/wificonfig", HTTP_POST, handleWifiConfigPost);
     // Start server
     server.begin();
 }

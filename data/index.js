@@ -52,23 +52,39 @@ window.onload = function() {
     );
   }
 
-  function getWiFiNetworks() {
+  function doApiGet(url, successCallback, errorCallback) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
       if (xhr.readyState === 4) {
-        var networkList = JSON.parse(xhr.responseText);
-        var networkListHtml = "";
-        for (var i = 0; i < networkList.length; i++) {
-          networkListHtml += networkDetailsToHtml(networkList[i]);
+        if (successCallback instanceof Function) {
+          successCallback(xhr.responseText);
         }
-        document.getElementById("networkSelector").innerHTML = networkListHtml;
       }
     };
-    xhr.open("GET", "/api/scan");
+    xhr.open("GET", url);
     xhr.send();
   }
 
-  // ----
+  function getWiFiNetworks() {
+    doApiGet("/api/scan", function(responseText) {
+      var networkList = JSON.parse(responseText);
+      var networkListHtml = "";
+      for (var i = 0; i < networkList.length; i++) {
+        networkListHtml += networkDetailsToHtml(networkList[i]);
+      }
+      document.getElementById("networkSelector").innerHTML = networkListHtml;
+    });
+  }
+
+  function getWiFiConfig() {
+    doApiGet("/api/wificonfig", function(responseText) {
+      var configuration = JSON.parse(responseText);
+
+      document.getElementById("ssid").value = configuration.ssid;
+      document.getElementById("key").value = configuration.key;
+    });
+  }
+
   var networkSelector = this.document.getElementById("networkSelector");
 
   networkSelector.onchange = function(e) {
@@ -77,12 +93,6 @@ window.onload = function() {
     }
   };
 
-  // ----
-  this.setTimeout(function() {
-    if (autoRefresh) {
-      getWiFiNetworks();
-    }
-  }, 10000);
-
+  getWiFiConfig();
   getWiFiNetworks();
 };

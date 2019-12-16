@@ -55,7 +55,6 @@ IPAddress setupWiFiConnection()
   WiFiConfig apnWiFiConfig;
 
   prefs.begin("wifi");
-  prefs.clear();
 
   if (prefs.getBytesLength("staCredentials") == 0)
   {
