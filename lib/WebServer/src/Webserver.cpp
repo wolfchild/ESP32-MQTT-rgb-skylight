@@ -11,6 +11,13 @@
 #define CONTENT_TYPE_PLAIN "text/plain"
 #define CONTENT_TYPE_HTML "text/html"
 
+#define WIFI_GET_WIFI_SSID_TEMPLATE "{\"ssid\":\"%s\",\"bssid\":\"%s\",\"rssi\":%d,\"channel\":%d,\"security\":%d}"
+#define WIFI_GET_CONFIG_SUCCESS_TEMPLATE "{\"ssid\":\"%s\",\"key\":\"%s\"}"
+#define WIFI_GET_CONFIG_ERROR_TEMPLATE "{\"message\":\"Error while saving configuration.\"}"
+
+#define WIFI_POST_CONFIG_SUCCESS_TEMPLATE "{\"message\":\"Configuration updated successfully\"}"
+#define WIFI_POST_CONFIG_ERROR_TEMPLATE "{\"message\":\"Error while saving configuration.\"}"
+
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 
@@ -44,33 +51,47 @@ void handleWifiScan(AsyncWebServerRequest *request)
     request->send(response);
 }
 
-// ---- website handlers
 void handleWifiConfigGet(AsyncWebServerRequest *request)
 {
     Preferences prefs;
     WiFiConfig wifiConfig;
 
+    int responseCode = 500;
+    char *responseBuffer;
+
+    digitalWrite(2, !digitalRead(2));
+
     prefs.begin("wifi");
     uint8_t a = prefs.getBytes("staCredentials", &wifiConfig, sizeof(wifiConfig));
     prefs.end();
 
-    String json = "{";
     if (a == sizeof(WiFiConfig))
     {
-        json += "\"ssid\":\"" + String(wifiConfig.ssid) + "\",";
-        json += "\"key\":\"" + String(wifiConfig.password) + "\"";
-    }
-    json += "}";
+        uint8_t bufferSize = sizeof(WIFI_GET_CONFIG_SUCCESS_TEMPLATE) - 4 + sizeof(wifiConfig.ssid) + sizeof(wifiConfig.password) + 2;
+        responseBuffer = (char *)malloc(bufferSize);
 
-    AsyncWebServerResponse *response = request->beginResponse(200, F(CONTENT_TYPE_JSON), json);
+        sprintf_P(responseBuffer, WIFI_GET_CONFIG_SUCCESS_TEMPLATE, wifiConfig.ssid, "********\0");
+
+        responseCode = 200;
+    }
+    else
+    {
+        uint8_t bufferSize = sizeof(WIFI_GET_CONFIG_ERROR_TEMPLATE) + 1;
+        responseBuffer = (char *)malloc(bufferSize);
+        responseCode = 500;
+    }
+
+    AsyncWebServerResponse *response = request->beginResponse(responseCode, F(CONTENT_TYPE_JSON), responseBuffer);
     response->addHeader(F(CORS_HEADER), "*");
     request->send(response);
+
+    free(responseBuffer);
 }
 
 void handleWifiConfigPost(AsyncWebServerRequest *request)
 {
-    String json = "{";
     int responseCode = 500;
+    char *responseBuffer;
 
     if (request->hasParam("ssid", true) && request->hasParam("key", true))
     {
@@ -88,19 +109,22 @@ void handleWifiConfigPost(AsyncWebServerRequest *request)
         prefs.putBytes("staCredentials", &wifiConfig, sizeof(wifiConfig));
         prefs.end();
 
-        json += "\"message\":\"Configuration updated successfully.";
+        responseBuffer = (char *)malloc(sizeof(WIFI_POST_CONFIG_SUCCESS_TEMPLATE) + 1);
+        strlcpy(responseBuffer, WIFI_POST_CONFIG_SUCCESS_TEMPLATE, sizeof(WIFI_POST_CONFIG_SUCCESS_TEMPLATE));
         responseCode = 200;
     }
     else
     {
-        json += "\"message\":\"Error while saving configuration.";
+        responseBuffer = (char *)malloc(sizeof(WIFI_POST_CONFIG_ERROR_TEMPLATE) + 1);
+        strlcpy(responseBuffer, WIFI_POST_CONFIG_ERROR_TEMPLATE, sizeof(WIFI_POST_CONFIG_ERROR_TEMPLATE));
         responseCode = 500;
     }
-    json += "}";
 
-    AsyncWebServerResponse *response = request->beginResponse(responseCode, F(CONTENT_TYPE_JSON), json);
+    AsyncWebServerResponse *response = request->beginResponse(responseCode, F(CONTENT_TYPE_JSON), responseBuffer);
     response->addHeader(F(CORS_HEADER), "*");
     request->send(response);
+
+    free(responseBuffer);
 }
 
 WebServer::WebServer()

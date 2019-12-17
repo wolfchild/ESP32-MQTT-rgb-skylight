@@ -159,6 +159,9 @@ void setup()
 
   // Start mDNS responder
   startmDNSResponder("skylight");
+
+  pinMode(2, OUTPUT);
+  digitalWrite(2, HIGH);
 }
 
 void loop()
