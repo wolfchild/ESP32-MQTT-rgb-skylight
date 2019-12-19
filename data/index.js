@@ -1,6 +1,4 @@
 window.onload = function() {
-  var autoRefresh = true;
-
   // Source: https://www.metageek.com/training/resources/understanding-rssi.html
   function rssiToCssClass(rssi) {
     var signalStrength = 0;
@@ -43,6 +41,8 @@ window.onload = function() {
       n.ssid +
       '" class="imagebacked ' +
       rssiToCssClass(n.rssi) +
+      '" data-security="' +
+      n.security +
       '">' +
       n.ssid +
       " (" +
@@ -62,6 +62,22 @@ window.onload = function() {
       }
     };
     xhr.open("GET", url);
+    xhr.send();
+  }
+
+  function doApiPost(url, successCallback, errorCallback) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === XMLHttpRequest.DONE) {
+        if ((xhr.status == 200) && (successCallback instanceof Function) {
+          successCallback(xhr.responseText);
+        } 
+        if ((xhr.status == 500) && (errorCallback instanceof Function){
+          errorCallback(xhr.responseText);
+        }
+      }
+    };
+    xhr.open("POST", url);
     xhr.send();
   }
 
@@ -85,12 +101,19 @@ window.onload = function() {
     });
   }
 
-  var networkSelector = this.document.getElementById("networkSelector");
-
-  networkSelector.onchange = function(e) {
+  // ---- attach ui event handlers
+  this.document.getElementById("networkSelector").onchange = function(e) {
     if (e.srcElement.selectedIndex != undefined) {
       document.getElementById("ssid").value = e.target.value;
+      var selectedOption = e.target.options[e.target.selectedIndex];
+
+      var keyInputField = document.getElementById("key");
+      keyInputField.value = "";
+      keyInputField.disabled =
+        selectedOption.getAttribute("data-security") == "0";
     }
+
+    this.document.getElementById("save-button").onclick = function(e) {};
   };
 
   getWiFiConfig();

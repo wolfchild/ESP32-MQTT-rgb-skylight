@@ -17,6 +17,8 @@ Preferences prefs;
 
 WebOta *webOta;
 WebServer *webServer;
+MqttClient *mqttClient;
+
 Ticker updateChecker;
 
 const float updateCheckInterval = 86400; // every 24 hours

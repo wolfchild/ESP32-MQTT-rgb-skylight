@@ -12,8 +12,9 @@
   <link rel="stylesheet" href="css/custom.css">
   <link rel="icon" type="image/png" href="images/favicon.png">
   <link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
-  <script type="text/javascript" src="index.js"></script>
+  <script type="text/javascript" src="status.js"></script>
 </head>
+
 <nav class="navbar">
   <div class="container">
     <ul class="navbar-list">
@@ -34,30 +35,18 @@
   <div class="container">
     <div class="row">
       <div style="margin-top: 10%">
-        <h3>WiFi Configuration</h3>
-        <p>Please select your preferred network and save. For hidden networks, enter the SSID manually.</p>
-        <form action="/" method="POST">
-          <div class="row">
-            <div class="u-full-width">
-              <label for="networkSelector">Detected networks</label>
-              <select class="u-full-width autoheight" size="4" id="networkSelector"></select>
-            </div>
-          </div>
-          <div class="row">
-            <div class="u-full-width">
-              <label for="ssid">SSID</label>
-              <input class="u-full-width" type="text" name="ssid" id="ssid">
-            </div>
-          </div>
-          <div class="row">
-            <div class="u-full-width">
-              <label for="key">Password</label>
-              <input class="u-full-width" type="password" name="key" id="key">
-            </div>
-          </div>
-          <input id="save-button" class="button-primary" value="Save">
-        </form>
+        <h3>System status</h3>
+        <ul>
+          <li><strong>Uptime:</strong>30d 18h 20m</li>
+          <li><strong>Heap memory free:</strong> 125Kb</li>
+          <li><strong>Status:</strong> OK</li>
+          <li><strong>IP Address:</strong>192.168.1.152</li>
+        </ul>
       </div>
+    </div>
+    <div class="row">
+      <h3>Light Status</h3>
+      <div id="lights" style="width:100%"></div>
     </div>
   </div>
 </body>
