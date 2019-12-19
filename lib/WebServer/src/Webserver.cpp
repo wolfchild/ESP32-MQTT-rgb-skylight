@@ -12,6 +12,8 @@
 #define CONTENT_TYPE_HTML "text/html"
 
 #define WIFI_GET_WIFI_SSID_TEMPLATE "{\"ssid\":\"%s\",\"bssid\":\"%s\",\"rssi\":%d,\"channel\":%d,\"security\":%d}"
+#define WIFI_GET_STATUS_TEMPLATE "{\"freeheap\":%d, \"minfreeheap\":%d, \"maxallocheap\":%d}"
+
 #define WIFI_GET_CONFIG_SUCCESS_TEMPLATE "{\"ssid\":\"%s\",\"key\":\"%s\"}"
 #define WIFI_GET_CONFIG_ERROR_TEMPLATE "{\"message\":\"Error while saving configuration.\"}"
 
@@ -127,6 +129,19 @@ void handleWifiConfigPost(AsyncWebServerRequest *request)
     free(responseBuffer);
 }
 
+void handleStatusPage(AsyncWebServerRequest *request)
+{
+    //char *responseBuffer;
+    Serial.println(ESP.getFreeHeap());
+    //Serial.println(ESP.getHeapSize());
+    //Serial.println(ESP.getMaxAllocHeap());
+    //Serial.println(ESP.getMinFreeHeap());
+
+    AsyncWebServerResponse *response = request->beginResponse(200, F(CONTENT_TYPE_JSON), "{}");
+    response->addHeader(F(CORS_HEADER), "*");
+    request->send(response);
+}
+
 WebServer::WebServer()
 {
     // Initialize SPIFFS
@@ -145,6 +160,7 @@ WebServer::WebServer()
     // API GET
     server.on("/api/scan", HTTP_GET, handleWifiScan);
     server.on("/api/wificonfig", HTTP_GET, handleWifiConfigGet);
+    server.on("/api/status", HTTP_GET, handleStatusPage);
 
     // API POST
     server.on("/api/wificonfig", HTTP_POST, handleWifiConfigPost);

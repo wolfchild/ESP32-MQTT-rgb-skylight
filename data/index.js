@@ -69,10 +69,10 @@ window.onload = function() {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
       if (xhr.readyState === XMLHttpRequest.DONE) {
-        if ((xhr.status == 200) && (successCallback instanceof Function) {
+        if (xhr.status == 200 && successCallback instanceof Function) {
           successCallback(xhr.responseText);
-        } 
-        if ((xhr.status == 500) && (errorCallback instanceof Function){
+        }
+        if (xhr.status == 500 && errorCallback instanceof Function) {
           errorCallback(xhr.responseText);
         }
       }
@@ -113,7 +113,7 @@ window.onload = function() {
         selectedOption.getAttribute("data-security") == "0";
     }
 
-    this.document.getElementById("save-button").onclick = function(e) {};
+    //this.document.getElementById("save-button").onclick = function(e) {};
   };
 
   getWiFiConfig();
