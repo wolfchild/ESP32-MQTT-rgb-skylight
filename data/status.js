@@ -1,4 +1,11 @@
 window.onload = function() {
+  var lightStatus = [
+    { r: 255, g: 0, b: 0 },
+    { r: 0, g: 255, b: 0 },
+    { r: 0, g: 0, b: 255 },
+    { r: 128, g: 128, b: 128 }
+  ];
+
   function doApiGet(url, successCallback) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
@@ -28,7 +35,7 @@ window.onload = function() {
     xhr.send();
   }
 
-  function drawLightStatus(width, height) {
+  function drawLightStatus(width, height, lightStatus) {
     var xmlns = "http://www.w3.org/2000/svg";
     var image = document.createElementNS(xmlns, "svg");
     image.setAttributeNS(null, "viewBox", "0 0 " + width + " " + height);
@@ -58,17 +65,8 @@ window.onload = function() {
         var rDelta = Math.floor(256 / 19);
         var gDelta = Math.floor(256 / 10);
         var bDelta = Math.floor(256 / 29);
-
-        var cellColour =
-          y % 2
-            ? "rgb(" +
-              rDelta * x +
-              "," +
-              gDelta * y +
-              "," +
-              bDelta * (x + y) +
-              ")"
-            : "snow";
+        var cs = lightStatus[(x * y + y) % lightStatus.length];
+        var cellColour = "rgb(" + cs.r + "," + cs.g + "," + cs.b + ")";
 
         var cell = document.createElementNS(xmlns, "rect");
         cell.setAttributeNS(null, "width", cellWidth);
@@ -84,5 +82,5 @@ window.onload = function() {
     lightsStatusElement.appendChild(image);
   }
 
-  drawLightStatus(190, 100);
+  drawLightStatus(190, 100, lightStatus);
 };
