@@ -15,7 +15,7 @@
 #define WIFI_GET_STATUS_TEMPLATE "{\"freeheap\":%d, \"minfreeheap\":%d, \"maxallocheap\":%d}"
 
 #define WIFI_GET_CONFIG_SUCCESS_TEMPLATE "{\"ssid\":\"%s\",\"key\":\"%s\"}"
-#define WIFI_GET_CONFIG_ERROR_TEMPLATE "{\"message\":\"Error while saving configuration.\"}"
+#define WIFI_GET_CONFIG_ERROR_TEMPLATE "{\"message\":\"Error while retrieving configuration.\"}"
 
 #define WIFI_POST_CONFIG_SUCCESS_TEMPLATE "{\"message\":\"Configuration updated successfully\"}"
 #define WIFI_POST_CONFIG_ERROR_TEMPLATE "{\"message\":\"Error while saving configuration.\"}"
@@ -61,7 +61,7 @@ void handleWifiConfigGet(AsyncWebServerRequest *request)
     int responseCode = 500;
     char *responseBuffer;
 
-    digitalWrite(2, !digitalRead(2));
+   //digitalWrite(2, !digitalRead(2));
 
     prefs.begin("wifi");
     uint8_t a = prefs.getBytes("staCredentials", &wifiConfig, sizeof(wifiConfig));

@@ -41,7 +41,7 @@ window.onload = function() {
 
     var blur = document.createElementNS(xmlns, "feGaussianBlur");
     blur.setAttributeNS(null, "in", "SourceGraphic");
-    blur.setAttributeNS(null, "stdDeviation", 5);
+    blur.setAttributeNS(null, "stdDeviation", 6);
     filter.appendChild(blur);
 
     var g = document.createElementNS(xmlns, "g");
